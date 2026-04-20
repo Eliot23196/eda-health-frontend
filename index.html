@@ -87,7 +87,7 @@
             try {
                 // 2. Conexión con el Backend en Render
                 // AJUSTE CLAVE: Se usa "texto" para coincidir con el main.py
-                const response = await fetch('https://backend-eda.onrender.com', {
+                const response = await fetch('https://backend-eda.onrender.com/consultar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ texto: texto })
