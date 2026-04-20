@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDA Health</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#1a6ef5', light: '#EBF2FF', dark: '#1558c8' },
+          },
+          fontFamily: {
+            sans: ['DM Sans', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'DM Sans', sans-serif; background: #f5f6fa; }
+    input, select, textarea { font-family: 'DM Sans', sans-serif; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ── Icons ─────────────────────────────────────────────────── */
+const Icon = ({ d, size = 18, stroke = 'currentColor', fill = 'none', strokeWidth = 2, viewBox = '0 0 24 24' }) => (
+  <svg width={size} height={size} viewBox={viewBox} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
+  </svg>
+);
+
+const icons = {
+  dashboard: ['M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'],
+  patients:  ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],
+  calendar:  ['M3 4h18v18H3zM16 2v4M8 2v4M3 10h18', 'M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01'],
+  ai:        ['M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'],
+  settings:  ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z','M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'],
+  api:       ['M2 6h20v12H2zM6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2'],
+  logout:    ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4','M16 17l5-5-5-5','M21 12H9'],
+  arrow:     ['M5 12h14','M12 5l7 7-7 7'],
+  plus:      ['M12 5v14M5 12h14'],
+  pulse:     ['M22 12h-4l-3 9L9 3l-3 9H2'],
+  clock:     ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z','M12 6v6l4 2'],
+  users:     ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2','M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z','M23 21v-2a4 4 0 0 0-3-3.87','M16 3.13a4 4 0 0 1 0 7.75'],
+  chevron:   ['M9 18l6-6-6-6'],
+  check:     ['M20 6L9 17l-5-5'],
+  x:         ['M18 6L6 18M6 6l12 12'],
+  user:      ['M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2','M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],
+  notes:     ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z','M14 2v6h6','M16 13H8M16 17H8M10 9H8'],
+  stethoscope: ['M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3','M8 15v1a6 6 0 0 0 6 6h0a6 6 0 0 0 6-6v-4','M20 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'],
+};
+
+/* ── Data ────────────────────────────────────────────────────── */
+const initialPatients = [
+  { id: 1, name: 'Ana García',      age: 34, tipo: 'Consulta general', priority: 'Normal',   time: '14:31', date: '2025-04-20', status: 'Pendiente' },
+  { id: 2, name: 'Carlos Mendoza',  age: 52, tipo: 'Revisión mensual', priority: 'Urgente',  time: '12:31', date: '2025-04-20', status: 'Atendido'  },
+  { id: 3, name: 'María López',     age: 28, tipo: 'Control prenatal', priority: 'Normal',   time: '10:00', date: '2025-04-21', status: 'Pendiente' },
+  { id: 4, name: 'Roberto Jiménez', age: 61, tipo: 'Cardiología',      priority: 'Prioritario', time: '09:00', date: '2025-04-21', status: 'Pendiente' },
+];
+
+/* ── Badge ──────────────────────────────────────────────────── */
+const Badge = ({ label }) => {
+  const map = {
+    Normal:      'bg-emerald-50 text-emerald-700',
+    Urgente:     'bg-red-50 text-red-700',
+    Prioritario: 'bg-amber-50 text-amber-700',
+    Pendiente:   'bg-blue-50 text-blue-700',
+    Atendido:    'bg-gray-100 text-gray-600',
+  };
+  return (
+    <span className={`text-xs font-500 px-3 py-1 rounded-full ${map[label] || 'bg-gray-100 text-gray-600'}`}>
+      {label}
+    </span>
+  );
+};
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+const navItems = [
+  { key: 'dashboard',  label: 'Dashboard',   icon: 'dashboard' },
+  { key: 'pacientes',  label: 'Pacientes',   icon: 'patients' },
+  { key: 'agenda',     label: 'Agenda',      icon: 'calendar' },
+  { key: 'consulta',   label: 'Consulta IA', icon: 'ai' },
+  { key: 'ajustes',    label: 'Ajustes',     icon: 'settings' },
+];
+
+const Sidebar = ({ active, setActive }) => (
+  <aside className="w-56 min-w-56 bg-white border-r border-gray-100 flex flex-col h-screen">
+    <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-100">
+      <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-white font-bold text-sm">E</div>
+      <span className="font-semibold text-gray-900 text-sm">EDA Health</span>
+    </div>
+
+    <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5">
+      {navItems.map(({ key, label, icon }) => (
+        <button
+          key={key}
+          onClick={() => setActive(key)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-left transition-colors
+            ${active === key
+              ? 'bg-brand-light text-brand font-medium'
+              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'}`}
+        >
+          <Icon d={icons[icon]} size={17} />
+          {label}
+        </button>
+      ))}
+    </nav>
+
+    <div className="border-t border-gray-100 px-3 py-3 flex flex-col gap-0.5">
+      <div className="flex items-center gap-3 px-3 py-2 text-sm text-gray-500">
+        <Icon d={icons.api} size={16} />
+        <span>Config API</span>
+        <span className="ml-auto w-2 h-2 bg-amber-400 rounded-full"></span>
+      </div>
+      <div className="flex items-center gap-3 px-3 py-2">
+        <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold">TD</div>
+        <div className="flex flex-col leading-tight">
+          <span className="text-xs font-medium text-gray-800">Test Doctor</span>
+          <span className="text-xs text-gray-400">doctor@test.com</span>
+        </div>
+      </div>
+      <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 w-full">
+        <Icon d={icons.logout} size={16} />
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+);
+
+/* ── Dashboard ───────────────────────────────────────────────── */
+const Dashboard = ({ patients, setActive, openNuevaConsulta }) => {
+  const hoy = patients.filter(p => p.date === '2025-04-20');
+  const urgentes = patients.filter(p => p.priority === 'Urgente' || p.priority === 'Prioritario');
+  const atendidos = patients.filter(p => p.status === 'Atendido');
+
+  return (
+    <div className="flex-1 overflow-y-auto p-7 bg-gray-50">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Resumen Diario</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Bienvenido de vuelta, revise su agenda para hoy.</p>
+        </div>
+        <button
+          onClick={openNuevaConsulta}
+          className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors"
+        >
+          Nueva Consulta
+          <Icon d={icons.arrow} size={15} stroke="white" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Citas Hoy',             value: hoy.length,       icon: 'calendar', color: 'text-blue-500',   bg: 'bg-blue-50'    },
+          { label: 'Pacientes Prioritarios', value: urgentes.length,  icon: 'pulse',    color: 'text-red-500',    bg: 'bg-red-50'     },
+          { label: 'Consultas Realizadas',   value: atendidos.length, icon: 'clock',    color: 'text-emerald-500',bg: 'bg-emerald-50' },
+          { label: 'Total Pacientes',        value: patients.length,  icon: 'users',    color: 'text-gray-500',   bg: 'bg-gray-100'   },
+        ].map(({ label, value, icon, color, bg }) => (
+          <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
+            <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center`}>
+              <Icon d={icons[icon]} size={18} stroke={color.replace('text-','').includes('-') ? undefined : color} className={color} />
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gray-900">{value}</div>
+              <div className="text-xs text-gray-400 mt-0.5">{label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 280px' }}>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-semibold text-gray-900">Próximas Citas</h2>
+            <button onClick={() => setActive('agenda')} className="text-xs text-brand hover:underline">Ver agenda</button>
+          </div>
+          {hoy.map(p => (
+            <div key={p.id} className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">
+              <div className="bg-gray-100 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-500 whitespace-nowrap">{p.time}</div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-800">{p.name}</div>
+                <div className="text-xs text-gray-400">{p.tipo}</div>
+              </div>
+              <Badge label={p.priority} />
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-brand rounded-2xl p-5 flex flex-col gap-3">
+          <div className="text-base font-semibold text-white">Asistente IA</div>
+          <div className="text-sm text-blue-200">Analice síntomas rápidamente</div>
+          <div className="text-sm text-blue-100 leading-relaxed">
+            Utilice el módulo de consulta para obtener sugerencias de diagnóstico, triaje automático y análisis de historiales clínicos.
+          </div>
+          <button
+            onClick={() => setActive('consulta')}
+            className="mt-2 bg-white text-brand text-sm font-semibold py-2.5 rounded-xl hover:bg-blue-50 transition-colors"
+          >
+            Iniciar Análisis
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── Pacientes ───────────────────────────────────────────────── */
+const Pacientes = ({ patients, openNuevaConsulta }) => (
+  <div className="flex-1 overflow-y-auto p-7 bg-gray-50">
+    <div className="flex justify-between items-start mb-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Pacientes</h1>
+        <p className="text-sm text-gray-500 mt-0.5">{patients.length} pacientes registrados</p>
+      </div>
+      <button onClick={openNuevaConsulta} className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors">
+        <Icon d={icons.plus} size={15} stroke="white" />
+        Nueva Consulta
+      </button>
+    </div>
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-100 bg-gray-50">
+            {['Paciente', 'Edad', 'Tipo de consulta', 'Prioridad', 'Estado', 'Hora'].map(h => (
+              <th key={h} className="text-left text-xs font-medium text-gray-400 px-5 py-3">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {patients.map(p => (
+            <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+              <td className="px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand text-xs font-semibold">
+                    {p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <span className="font-medium text-gray-800">{p.name}</span>
+                </div>
+              </td>
+              <td className="px-5 py-3 text-gray-500">{p.age} años</td>
+              <td className="px-5 py-3 text-gray-600">{p.tipo}</td>
+              <td className="px-5 py-3"><Badge label={p.priority} /></td>
+              <td className="px-5 py-3"><Badge label={p.status} /></td>
+              <td className="px-5 py-3 text-gray-400">{p.time}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+/* ── Agenda ──────────────────────────────────────────────────── */
+const Agenda = ({ patients, openNuevaConsulta }) => {
+  const byDate = patients.reduce((acc, p) => {
+    if (!acc[p.date]) acc[p.date] = [];
+    acc[p.date].push(p);
+    return acc;
+  }, {});
+  return (
+    <div className="flex-1 overflow-y-auto p-7 bg-gray-50">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Agenda</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Vista de citas por fecha</p>
+        </div>
+        <button onClick={openNuevaConsulta} className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors">
+          <Icon d={icons.plus} size={15} stroke="white" />
+          Nueva Consulta
+        </button>
+      </div>
+      {Object.entries(byDate).sort().map(([date, citas]) => (
+        <div key={date} className="mb-5">
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            {new Date(date + 'T12:00:00').toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            {citas.map((p, i) => (
+              <div key={p.id} className={`flex items-center gap-4 px-5 py-3.5 ${i < citas.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                <div className="w-14 text-center">
+                  <div className="text-xs font-semibold text-brand">{p.time}</div>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand text-xs font-semibold">
+                  {p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-800">{p.name}</div>
+                  <div className="text-xs text-gray-400">{p.tipo}</div>
+                </div>
+                <Badge label={p.priority} />
+                <Badge label={p.status} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ── Consulta IA ─────────────────────────────────────────────── */
+const ConsultaIA = () => {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: 'Hola, soy el Asistente IA de EDA Health. Describa los síntomas del paciente y le ayudaré con sugerencias de diagnóstico y triaje.' }
+  ]);
+  const [loading, setLoading] = useState(false);
+
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = { role: 'user', text: input };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setLoading(true);
+    try {
+      const res = await fetch('https://backend-eda.onrender.com/consultar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensaje: input })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const reply = data.respuesta || data.message || data.text || JSON.stringify(data);
+      setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', text: `Error al conectar con el servidor: ${err.message}. Verifique que el backend esté activo en Render.` }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col bg-gray-50">
+      <div className="px-7 py-5 border-b border-gray-100 bg-white">
+        <h1 className="text-2xl font-bold text-gray-900">Consulta IA</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Análisis de síntomas y sugerencias de diagnóstico</p>
+      </div>
+      <div className="flex-1 overflow-y-auto p-7 flex flex-col gap-4">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {m.role === 'assistant' && (
+              <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold mr-3 mt-1 shrink-0">IA</div>
+            )}
+            <div className={`max-w-xl rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap
+              ${m.role === 'user'
+                ? 'bg-brand text-white rounded-br-sm'
+                : 'bg-white border border-gray-100 text-gray-700 rounded-bl-sm'}`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold mr-3 shrink-0">IA</div>
+            <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-gray-400">Analizando...</div>
+          </div>
+        )}
+      </div>
+      <div className="px-7 pb-7 pt-3 bg-gray-50">
+        <div className="flex gap-3 bg-white rounded-2xl border border-gray-200 p-2 shadow-sm">
+          <input
+            className="flex-1 px-3 py-2 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
+            placeholder="Describa síntomas, signos vitales o consulta clínica..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+          />
+          <button
+            onClick={send}
+            disabled={loading || !input.trim()}
+            className="bg-brand text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-brand-dark disabled:opacity-40 transition-colors"
+          >
+            Enviar
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-2 text-center">Las sugerencias de IA no reemplazan el juicio clínico del médico.</p>
+      </div>
+    </div>
+  );
+};
+
+/* ── Ajustes ─────────────────────────────────────────────────── */
+const Ajustes = () => (
+  <div className="flex-1 overflow-y-auto p-7 bg-gray-50">
+    <h1 className="text-2xl font-bold text-gray-900 mb-1">Ajustes</h1>
+    <p className="text-sm text-gray-500 mb-6">Configuración de cuenta y sistema</p>
+    <div className="space-y-4 max-w-xl">
+      {[
+        { label: 'Nombre completo', value: 'Test Doctor', type: 'text' },
+        { label: 'Correo electrónico', value: 'doctor@test.com', type: 'email' },
+        { label: 'Especialidad', value: 'Medicina General', type: 'text' },
+        { label: 'Cédula profesional', value: 'MG-12345', type: 'text' },
+      ].map(({ label, value, type }) => (
+        <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5">
+          <label className="text-xs font-medium text-gray-400 block mb-2">{label}</label>
+          <input
+            type={type}
+            defaultValue={value}
+            className="w-full text-sm text-gray-800 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 outline-none focus:border-brand focus:bg-white transition-colors"
+          />
+        </div>
+      ))}
+      <button className="bg-brand text-white text-sm font-medium px-6 py-2.5 rounded-xl hover:bg-brand-dark transition-colors">
+        Guardar cambios
+      </button>
+    </div>
+  </div>
+);
+
+/* ── Modal Nueva Consulta ────────────────────────────────────── */
+const ModalNuevaConsulta = ({ onClose, onSave }) => {
+  const [form, setForm] = useState({ name: '', age: '', tipo: 'Consulta general', priority: 'Normal', time: '', date: '2025-04-20', notes: '' });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSave = () => {
+    if (!form.name.trim() || !form.time) return;
+    onSave(form);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Nueva Consulta</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Complete los datos del paciente</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+            <Icon d={icons.x} size={15} stroke="#6b7280" />
+          </button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1.5">Nombre del paciente *</label>
+              <input
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand"
+                placeholder="Ej. Juan Pérez"
+                value={form.name}
+                onChange={e => set('name', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1.5">Edad</label>
+              <input
+                type="number"
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand"
+                placeholder="Ej. 35"
+                value={form.age}
+                onChange={e => set('age', e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Tipo de consulta</label>
+            <select
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand bg-white"
+              value={form.tipo}
+              onChange={e => set('tipo', e.target.value)}
+            >
+              {['Consulta general', 'Revisión mensual', 'Control prenatal', 'Cardiología', 'Pediatría', 'Urgencias', 'Seguimiento'].map(t => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1.5">Prioridad</label>
+              <select
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand bg-white"
+                value={form.priority}
+                onChange={e => set('priority', e.target.value)}
+              >
+                {['Normal', 'Prioritario', 'Urgente'].map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 block mb-1.5">Hora *</label>
+              <input
+                type="time"
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand"
+                value={form.time}
+                onChange={e => set('time', e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Fecha</label>
+            <input
+              type="date"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand"
+              value={form.date}
+              onChange={e => set('date', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Notas clínicas</label>
+            <textarea
+              rows={3}
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-brand resize-none"
+              placeholder="Síntomas, motivo de consulta..."
+              value={form.notes}
+              onChange={e => set('notes', e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex gap-3 px-6 pb-6">
+          <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+            Cancelar
+          </button>
+          <button onClick={handleSave} className="flex-1 bg-brand text-white text-sm font-medium py-2.5 rounded-xl hover:bg-brand-dark transition-colors flex items-center justify-center gap-2">
+            <Icon d={icons.check} size={15} stroke="white" />
+            Guardar consulta
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── App Root ────────────────────────────────────────────────── */
+const App = () => {
+  const [active, setActive] = useState('dashboard');
+  const [patients, setPatients] = useState(initialPatients);
+  const [showModal, setShowModal] = useState(false);
+
+  const addPatient = (form) => {
+    const nuevo = {
+      id: Date.now(),
+      name: form.name,
+      age: parseInt(form.age) || 0,
+      tipo: form.tipo,
+      priority: form.priority,
+      time: form.time,
+      date: form.date,
+      status: 'Pendiente',
+    };
+    setPatients(prev => [...prev, nuevo]);
+  };
+
+  const views = {
+    dashboard: <Dashboard patients={patients} setActive={setActive} openNuevaConsulta={() => setShowModal(true)} />,
+    pacientes: <Pacientes patients={patients} openNuevaConsulta={() => setShowModal(true)} />,
+    agenda:    <Agenda patients={patients} openNuevaConsulta={() => setShowModal(true)} />,
+    consulta:  <ConsultaIA />,
+    ajustes:   <Ajustes />,
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar active={active} setActive={setActive} />
+      {views[active]}
+      {showModal && <ModalNuevaConsulta onClose={() => setShowModal(false)} onSave={addPatient} />}
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
