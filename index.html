@@ -3,82 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDA Health - Consultoría IA</title>
+    <title>EDA Health - Gestión Médica IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .chat-container { height: calc(100vh - 200px); }
+        .chat-container { height: calc(100vh - 250px); }
         .sidebar-item:hover { background-color: #f3f4f6; cursor: pointer; }
-        .active-menu { background-color: #eff6ff; color: #2563eb; font-weight: 500; }
+        .active-menu { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+        .active-menu i { color: #2563eb; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-50 font-sans overflow-hidden">
 
     <div class="flex h-screen">
-        <div class="w-64 bg-white border-r flex flex-col">
+        <aside class="w-64 bg-white border-r flex flex-col shadow-sm">
             <div class="p-6">
                 <div class="flex items-center gap-2 text-blue-600 font-bold text-xl">
                     <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs">E</div>
                     EDA Health
                 </div>
             </div>
-            <nav class="flex-1 px-4 space-y-2">
-                <div onclick="abrirSeccion('Dashboard')" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-600">
-                    <i class="fas fa-th-large w-5"></i> Dashboard
+            <nav id="sidebar-nav" class="flex-1 px-4 space-y-1">
+                <div onclick="cambiarSeccion('Dashboard', this)" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-th-large w-5 text-gray-400"></i> Dashboard
                 </div>
-                <div onclick="abrirSeccion('Pacientes')" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-600">
-                    <i class="fas fa-users w-5"></i> Pacientes
+                <div onclick="cambiarSeccion('Pacientes', this)" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-users w-5 text-gray-400"></i> Pacientes
                 </div>
-                <div onclick="abrirSeccion('Agenda')" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-600">
-                    <i class="fas fa-calendar-alt w-5"></i> Agenda
+                <div onclick="cambiarSeccion('Agenda', this)" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-calendar-alt w-5 text-gray-400"></i> Agenda
                 </div>
-                <div class="sidebar-item p-3 rounded-lg active-menu flex items-center gap-3">
+                <div onclick="cambiarSeccion('Consulta IA', this)" class="sidebar-item p-3 rounded-lg active-menu flex items-center gap-3">
                     <i class="fas fa-comment-medical w-5"></i> Consulta IA
                 </div>
-                <div onclick="abrirSeccion('Ajustes')" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-600">
-                    <i class="fas fa-cog w-5"></i> Ajustes
+                <div onclick="cambiarSeccion('Ajustes', this)" class="sidebar-item p-3 rounded-lg flex items-center gap-3 text-gray-500 mt-10">
+                    <i class="fas fa-cog w-5 text-gray-400"></i> Ajustes
                 </div>
             </nav>
-        </div>
+        </aside>
 
-        <div class="flex-1 flex flex-col">
-            <header class="h-16 bg-white border-b flex items-center justify-between px-8">
-                <h1 class="text-xl font-semibold text-gray-800">Consulta IA</h1>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b flex items-center justify-between px-8 z-10">
+                <h1 id="page-title" class="text-xl font-semibold text-gray-800">Consulta IA</h1>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm text-gray-500 font-medium">Dr. Eliot Lara</span>
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                        <i class="fas fa-user-md"></i>
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-gray-800">Eliot Lara R.</p>
+                        <p class="text-[10px] text-blue-600 uppercase font-bold">Senior Analyst</p>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 border border-blue-200 shadow-sm">
+                        <i class="fas fa-user-md text-lg"></i>
                     </div>
                 </div>
             </header>
 
-            <main class="p-8 flex-1 overflow-hidden flex flex-col">
-                <div id="chatBox" class="chat-container overflow-y-auto mb-4 space-y-4 pr-2">
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">IA</div>
-                        <div class="bg-white border p-4 rounded-2xl rounded-tl-none shadow-sm max-w-2xl text-gray-700">
-                            Hola, soy el Asistente IA de EDA Health. Describa los síntomas del paciente y le ayudaré con sugerencias de diagnóstico y triaje.
+            <main id="main-content" class="p-8 flex-1 overflow-y-auto">
+                <div id="chat-section" class="flex flex-col h-full">
+                    <div id="chatBox" class="chat-container overflow-y-auto mb-4 space-y-4 pr-2">
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]">IA</div>
+                            <div class="bg-white border p-4 rounded-2xl rounded-tl-none shadow-sm max-w-2xl text-gray-700">
+                                Bienvenido Dr. Lara. Describa los síntomas para el análisis clínico de hoy.
+                            </div>
                         </div>
                     </div>
+                    <div class="bg-white border rounded-xl p-2 shadow-sm flex items-center gap-2">
+                        <input type="text" id="userInput" placeholder="Describa síntomas o consulta..." class="flex-1 p-3 focus:outline-none text-gray-700">
+                        <button onclick="enviarConsulta()" id="btnEnviar" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all flex items-center gap-2">
+                            <span>Enviar</span> <i class="fas fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
                 </div>
-
-                <div class="bg-white border rounded-xl p-2 shadow-sm flex items-center gap-2">
-                    <input type="text" id="userInput" placeholder="Describa síntomas, signos vitales o consulta clínica..." 
-                           class="flex-1 p-3 focus:outline-none text-gray-700">
-                    <button onclick="enviarConsulta()" id="btnEnviar" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all flex items-center gap-2">
-                        <span>Enviar</span>
-                        <i class="fas fa-paper-plane text-xs"></i>
-                    </button>
-                </div>
-                <p class="text-[10px] text-gray-400 mt-2 text-center uppercase tracking-wider">Uso exclusivo profesional - EDA Analytics 2026</p>
             </main>
+            <footer class="bg-white border-t p-2 text-center">
+                <p class="text-[9px] text-gray-400 uppercase tracking-widest">EDA Analytics & BI - Costa Rica 2026</p>
+            </footer>
         </div>
     </div>
 
     <script>
-        // Función para los botones del menú que no abren
-        function abrirSeccion(nombre) {
-            alert(`La sección de ${nombre} se encuentra en mantenimiento técnico. Estamos integrando sus bases de datos.`);
+        const API_URL = 'https://backend-eda-final.onrender.com/consultar';
+
+        function cambiarSeccion(seccion, elemento) {
+            // 1. Actualizar estilos del menú
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-menu', 'text-blue-600', 'font-medium'));
+            document.querySelectorAll('.sidebar-item i').forEach(i => i.classList.replace('text-blue-600', 'text-gray-400'));
+            
+            elemento.classList.add('active-menu');
+            document.getElementById('page-title').innerText = seccion;
+
+            const content = document.getElementById('main-content');
+
+            // 2. Renderizar contenido según la sección
+            if (seccion === 'Dashboard') {
+                content.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border shadow-sm">
+                            <p class="text-gray-500 text-sm">Pacientes Hoy</p>
+                            <h3 class="text-2xl font-bold text-gray-800">12</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-blue-600">
+                            <p class="text-gray-500 text-sm">Consultas IA</p>
+                            <h3 class="text-2xl font-bold text-gray-800">45</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border shadow-sm">
+                            <p class="text-gray-500 text-sm">Pendientes</p>
+                            <h3 class="text-2xl font-bold text-gray-800">3</h3>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 h-96 rounded-xl border-2 border-dashed flex items-center justify-center text-gray-400">
+                        [Aquí se integrará tu reporte de Power BI]
+                    </div>
+                `;
+            } else if (seccion === 'Pacientes') {
+                content.innerHTML = `
+                    <div class="bg-white border rounded-xl shadow-sm overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 border-b text-xs uppercase text-gray-400">
+                                <tr>
+                                    <th class="p-4">Paciente</th><th class="p-4">ID</th><th class="p-4">Estado</th><th class="p-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y text-sm">
+                                <tr><td class="p-4 font-medium">Juan Pérez</td><td class="p-4">1-1234-5678</td><td class="p-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px]">ESTABLE</span></td><td class="p-4 text-blue-600 cursor-pointer">Ver</td></tr>
+                                <tr><td class="p-4 font-medium">María Solano</td><td class="p-4">2-0987-0543</td><td class="p-4"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px]">URGENTE</span></td><td class="p-4 text-blue-600 cursor-pointer">Ver</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (seccion === 'Agenda') {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between bg-blue-600 text-white p-4 rounded-xl shadow-md">
+                            <h2 class="font-bold">Lunes, 20 de Abril</h2>
+                            <button class="bg-white text-blue-600 px-3 py-1 rounded-lg text-sm font-bold">+ Nueva Cita</button>
+                        </div>
+                        <div class="bg-white border p-4 rounded-xl flex items-center gap-4">
+                            <div class="font-bold text-blue-600">08:00 AM</div>
+                            <div class="flex-1 border-l-2 pl-4 border-blue-600">
+                                <p class="font-semibold">Consulta General - Juan Pérez</p>
+                                <p class="text-xs text-gray-400">Motivo: Control de presión</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (seccion === 'Consulta IA') {
+                // Recarga la interfaz del chat
+                window.location.reload(); 
+            } else {
+                content.innerHTML = `<div class="p-10 text-center text-gray-400">Sección en desarrollo para EDA Health.</div>`;
+            }
         }
 
         async function enviarConsulta() {
@@ -86,70 +159,35 @@
             const chatBox = document.getElementById('chatBox');
             const btn = document.getElementById('btnEnviar');
             const texto = input.value.trim();
-
             if (!texto) return;
 
-            // 1. Mostrar mensaje del usuario
-            chatBox.innerHTML += `
-                <div class="flex gap-3 justify-end">
-                    <div class="bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm max-w-2xl">
-                        ${texto}
-                    </div>
-                </div>
-            `;
-            
+            chatBox.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm max-w-2xl">${texto}</div></div>`;
             input.value = '';
             btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            btn.innerHTML = '<span>Procesando...</span>';
+            btn.innerHTML = '<span>Pensando...</span>';
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // 2. Conexión con el Backend en Render (URL Actualizada)
-                const response = await fetch('https://backend-eda-final.onrender.com/consultar', {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ texto: texto })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
-                    // 3. Mostrar respuesta de la IA (Limpia los asteriscos de Markdown)
-                    const respuestaLimpia = data.respuesta.replace(/\*\*/g, '').replace(/\n/g, '<br>');
-                    chatBox.innerHTML += `
-                        <div class="flex gap-3">
-                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">IA</div>
-                            <div class="bg-white border p-4 rounded-2xl rounded-tl-none shadow-sm max-w-2xl text-gray-800">
-                                ${respuestaLimpia}
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    throw new Error(data.detail || 'Error de conexión');
+                    const r = data.respuesta.replace(/\*\*/g, '').replace(/\n/g, '<br>');
+                    chatBox.innerHTML += `<div class="flex gap-3"><div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]">IA</div><div class="bg-white border p-4 rounded-2xl rounded-tl-none shadow-sm max-w-2xl text-gray-800">${r}</div></div>`;
                 }
-
-            } catch (error) {
-                chatBox.innerHTML += `
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">!</div>
-                        <div class="bg-red-50 border border-red-100 p-4 rounded-2xl rounded-tl-none text-red-700 text-sm max-w-2xl">
-                            ${error.message}. Por favor, intente de nuevo en unos segundos.
-                        </div>
-                    </div>
-                `;
+            } catch (e) {
+                chatBox.innerHTML += `<div class="p-4 bg-red-50 text-red-600 rounded-lg text-xs">Error de conexión con Render.</div>`;
             } finally {
                 btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 btn.innerHTML = '<span>Enviar</span> <i class="fas fa-paper-plane text-xs"></i>';
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
         }
 
-        // Permitir enviar con la tecla Enter
-        document.getElementById('userInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') enviarConsulta();
-        });
+        document.getElementById('userInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarConsulta(); });
     </script>
 </body>
 </html>
